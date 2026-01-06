@@ -1,54 +1,62 @@
 package fabio.dev.Portfolio.Controllers;
 
-import fabio.dev.Portfolio.ContactService;
+import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
+import fabio.dev.Portfolio.Mapper.contactToResponse;
+import fabio.dev.Portfolio.Services.ContactService;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
 import fabio.dev.Portfolio.Models.Contact;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/portfolio")
-public class ContactController {
+public class ContactController implements contactToResponse {
 
-    private ContactService contactService;
+    private final ContactService contactService;
+
+    // metod para mappear una entidad Contact a ContactResponseDto
+    @Override
+    public ContactResponseDTO mapToResponse(Contact contact) {
+        return new ContactResponseDTO(
+                contact.getId(),
+                contact.getName(),
+                contact.getEmail(),
+                contact.getMessage()
+        );
+    }
 
     public ContactController(ContactService contactService){
         this.contactService = contactService;
     }
 
-    @GetMapping
+    @GetMapping("/admin/dashboard")
     public ResponseEntity<List<Contact>> findAll(){
-        return ResponseEntity.status(HttpStatus.OK).body(contactService.findAllContacts());
+        return ResponseEntity.ok(contactService.findAllContacts());
     }
 
     @PostMapping("/contact")
-    public ResponseEntity<Contact> save(@RequestBody @Valid ContactDTO dto, BindingResult bindingResult){
-        if (bindingResult.hasErrors()){
-            return ResponseEntity.badRequest().body(new Contact());
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(contactService.saveContact(dto));
+    public ResponseEntity<?> save(@RequestBody @Valid ContactDTO dto){
+        Contact saved = contactService.saveContact(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(saved));
     }
 
-    @PatchMapping("/contact/{id}")
-    public ResponseEntity<Contact> update(@PathVariable Integer id, @Valid ContactUpdateDTO dto, BindingResult bindingResult){
-        if (bindingResult.hasErrors()){
-            return ResponseEntity.badRequest().body(new Contact());
-        }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(contactService.updateContact(id,dto));
+    @PatchMapping("/admin/dashboard/{id}")
+    public ResponseEntity<?> update(@PathVariable Integer id,@RequestBody @Valid ContactUpdateDTO dto){
+        Contact updated = contactService.updateContact(id, dto);
+        return ResponseEntity.ok(mapToResponse(updated));
     }
 
-    @PatchMapping("/contact/{id}")
-    public ResponseEntity<String> update(@PathVariable Integer id, BindingResult bindingResult){
-        if (bindingResult.hasErrors()){
-            return ResponseEntity.badRequest().body("Invalid ID");
-        }
+    @DeleteMapping("/admin/dashboard/{id}")
+    public ResponseEntity<Void> update(@PathVariable Integer id){
         contactService.deleteContact(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Contact deleted succesfully");
+        return ResponseEntity.noContent().build();
     }
+
+
 }
