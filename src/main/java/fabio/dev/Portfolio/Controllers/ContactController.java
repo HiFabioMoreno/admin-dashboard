@@ -13,14 +13,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/portfolio")
 public class ContactController implements contactToResponse {
 
     private final ContactService contactService;
 
-    // metod para mappear una entidad Contact a ContactResponseDto
+    // metodo para mappear una entidad Contact a ContactResponseDto
     @Override
     public ContactResponseDTO mapToResponse(Contact contact) {
         return new ContactResponseDTO(
@@ -57,6 +56,5 @@ public class ContactController implements contactToResponse {
         contactService.deleteContact(id);
         return ResponseEntity.noContent().build();
     }
-
 
 }

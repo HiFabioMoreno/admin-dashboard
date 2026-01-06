@@ -4,6 +4,7 @@ import fabio.dev.Portfolio.Controllers.ContactController;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
+import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Services.ContactService;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,6 +108,7 @@ public class ContactControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation error"))
                 .andDo(print());
 
         verify(contactService, never()).saveContact(any(ContactDTO.class));
@@ -134,6 +136,23 @@ public class ContactControllerTest {
     }
 
     @Test
+    @DisplayName("Should return 404 when updating non-existent contact")
+    void update_WithNonExistentId_ShouldReturnNotFound() throws Exception {
+
+        Integer contactId = 999;
+        ContactUpdateDTO dto = new ContactUpdateDTO(null,null,null);
+
+        when(contactService.updateContact(eq(contactId), any(ContactUpdateDTO.class)))
+                .thenThrow(new NoEntityException("Contact", contactId));
+
+        mockMvc.perform(patch("/portfolio/admin/dashboard/{id}", contactId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+    @Test
     @DisplayName("Should delete contact successfully")
     void delete_WithExistingId_ShouldDeleteContact() throws Exception {
 
@@ -146,6 +165,32 @@ public class ContactControllerTest {
                 .andDo(print());
 
         verify(contactService, times(1)).deleteContact(contactId);
+    }
+
+    @Test
+    @DisplayName("Should return 404 when deleting non-existent contact")
+    void delete_WithNonExistentId_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        Integer contactId = 999;
+        doThrow(new NoEntityException("Contact", contactId))
+                .when(contactService).deleteContact(contactId);
+
+        // Act & Assert
+        mockMvc.perform(delete("/portfolio/admin/dashboard/{id}", contactId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("Should return 400 when ID is invalid format")
+    void update_WithInvalidIdFormat_ShouldReturnBadRequest() throws Exception {
+        // Act & Assert
+        mockMvc.perform(patch("/portfolio/admin/dashboard/{id}", "invalid-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"read\": true}"))
+                .andExpect(status().isBadRequest())
+                .andDo(print());
     }
 
 }

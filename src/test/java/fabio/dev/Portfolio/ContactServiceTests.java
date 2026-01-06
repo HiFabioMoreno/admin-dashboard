@@ -3,7 +3,7 @@ package fabio.dev.Portfolio;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
-import fabio.dev.Portfolio.Exceptions.NotEntity;
+import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
 import fabio.dev.Portfolio.Services.ContactService;
@@ -102,7 +102,7 @@ public class ContactServiceTests {
     @Test
     @DisplayName("Should fail update contact ")
     public void updateContactIdEqualsZero(){
-        assertThrows(NotEntity.class,
+        assertThrows(NoEntityException.class,
                 () -> contactService.updateContact(0,new ContactUpdateDTO("Raul Flores", null,null)
                 ));
         verify(contactRepository,never()).findById(any());
@@ -112,7 +112,7 @@ public class ContactServiceTests {
     @Test
     public void updateContactIdNegative(){
         when(contactRepository.findById(-10)).thenReturn(Optional.empty());
-        assertThrows(NotEntity.class,
+        assertThrows(NoEntityException.class,
                 () ->  contactService.updateContact(-10,new ContactUpdateDTO("Raul Flores", null,null))
         );
         verify(contactRepository, never()).findById(-10);
@@ -120,7 +120,7 @@ public class ContactServiceTests {
 
     @Test
     public void updateContactIdNull(){
-        assertThrows(NotEntity.class,
+        assertThrows(NoEntityException.class,
                 () ->  contactService.updateContact(null,new ContactUpdateDTO("Raul Flores", null,null))
         );
         verify(contactRepository, never()).findById(any());
@@ -139,7 +139,7 @@ public class ContactServiceTests {
 
     @Test
     public void deleteContactIdNegativo(){
-        assertThrows(NotEntity.class,
+        assertThrows(NoEntityException.class,
                 ()-> contactService.deleteContact(-10)
         );
         verify(contactRepository,never()).existsById(-10);
@@ -148,7 +148,7 @@ public class ContactServiceTests {
 
     @Test
     public void deleteContactIdNull(){
-        assertThrows(NotEntity.class,
+        assertThrows(NoEntityException.class,
                 ()-> contactService.deleteContact(null)
         );
 
@@ -158,7 +158,7 @@ public class ContactServiceTests {
 
     @Test
     public void deleteContactIdZero(){
-        assertThrows(NotEntity.class,
+        assertThrows(NoEntityException.class,
                 ()-> contactService.deleteContact(0)
         );
 
