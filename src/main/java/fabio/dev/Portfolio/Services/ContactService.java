@@ -2,7 +2,7 @@ package fabio.dev.Portfolio.Services;
 
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
-import fabio.dev.Portfolio.Exceptions.NotEntity;
+import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
 import jakarta.transaction.Transactional;
@@ -48,10 +48,10 @@ public class ContactService{
         logger.info("updating contact with id {}", id);
 
         if( id == null || id <= 0){
-            throw new NotEntity("Invalid id");
+            throw new NoEntityException("Invalid id");
         }
 
-        Contact contact = contactRepository.findById(id).orElseThrow(() ->  new NotEntity("Contact",id));
+        Contact contact = contactRepository.findById(id).orElseThrow(() ->  new NoEntityException("Contact",id));
 
         if (dto.name() != null){contact.setName(dto.name());}
         if (dto.email() != null){contact.setEmail(dto.email());}
@@ -67,11 +67,11 @@ public class ContactService{
         logger.info("deleting contact with id {}", id);
 
         if( id == null || id <= 0){
-            throw new NotEntity("Contact",id);
+            throw new NoEntityException("Contact",id);
         }
 
         if(!contactRepository.existsById(id)){
-            throw new NotEntity("Contact",id);
+            throw new NoEntityException("Contact",id);
         }
         logger.info("deleted contact with id {} successfully", id);
         contactRepository.deleteById(id);
