@@ -58,7 +58,6 @@ public class ContactControllerTest {
         this.contact.setEmail(contactDTO.getEmail());
         this.contact.setName(contactDTO.getName());
         this.contact.setMessage(contactDTO.getMessage());
-        this.contact.setDate(LocalDate.now());
 
         this.contactResponseDTO = new ContactResponseDTO(1,"Fabio Moreno","ejemplo@gmail.com","Hey, let's keep in touch");
     }

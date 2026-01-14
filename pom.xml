@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>fabio.dev</groupId>
-	<artifactId>portfolio-backend</artifactId>
+	<artifactId>admin-dashboard</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Portfolio</name>
 	<description>Portfolio to showcase my projects and skills </description>
@@ -81,6 +81,11 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
     </dependencies>
 

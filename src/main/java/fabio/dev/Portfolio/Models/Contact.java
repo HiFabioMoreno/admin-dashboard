@@ -2,9 +2,8 @@ package fabio.dev.Portfolio.Models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class Contact {
@@ -23,9 +22,13 @@ public class Contact {
     @NotNull
     private String message;
 
-    @NotNull
-    @DateTimeFormat()
-    private LocalDate date;
+    @Column(name = "registrationDate", nullable = false, updatable = false)
+    private LocalDateTime registrationDate;
+
+    @PrePersist
+    void onCreate() {
+        this.registrationDate = LocalDateTime.now();
+    }
 
     public Contact(){};
 
@@ -57,11 +60,8 @@ public class Contact {
         this.message = message;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public LocalDateTime getRegistrationDate() {
+        return registrationDate;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
 }

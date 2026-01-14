@@ -1,6 +1,5 @@
 package fabio.dev.Portfolio.DTOs;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record ContactUpdateDTO(
