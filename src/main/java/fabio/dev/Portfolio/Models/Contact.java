@@ -2,9 +2,13 @@ package fabio.dev.Portfolio.Models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 public class Contact {
 
@@ -30,38 +34,6 @@ public class Contact {
         this.registrationDate = LocalDateTime.now();
     }
 
-    public Contact(){};
-
-    public Integer getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public LocalDateTime getRegistrationDate() {
-        return registrationDate;
-    }
+    public Contact(){}
 
 }
