@@ -8,9 +8,10 @@ import fabio.dev.Portfolio.Repositorys.ContactRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class ContactService{
@@ -19,7 +20,7 @@ public class ContactService{
 
     private ContactRepository contactRepository;
 
-    public ContactService(ContactRepository contactRepository){
+    public ContactService(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
     }
 
@@ -37,9 +38,19 @@ public class ContactService{
         return contactRepository.save(contact);
     }
 
-    public List<Contact> findAllContacts(){
+    public Page<Contact> findAllContacts(
+            Integer page,
+            Integer size,
+            String sortBy,
+            String sortDirection){
+
         logger.info("founded all contacts successfully");
-        return contactRepository.findAll();
+
+        Sort sort = sortDirection.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        return contactRepository.findAll(PageRequest.of(page, size, sort));
     }
 
     @Transactional
@@ -48,7 +59,7 @@ public class ContactService{
         logger.info("updating contact with id {}", id);
 
         if( id == null || id <= 0){
-            throw new NoEntityException("Invalid id");
+            throw new NoEntityException("Contact", id);
         }
 
         Contact contact = contactRepository.findById(id).orElseThrow(() ->  new NoEntityException("Contact",id));
@@ -58,7 +69,6 @@ public class ContactService{
         if (dto.message() != null){contact.setMessage(dto.message());}
 
         logger.info("updated contact with id {} successfully", id);
-
         return contactRepository.save(contact);
     }
 
