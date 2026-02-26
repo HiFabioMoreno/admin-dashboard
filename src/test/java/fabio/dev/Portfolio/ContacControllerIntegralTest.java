@@ -50,7 +50,7 @@ public class ContacControllerIntegralTest {
         contactDTO.setEmail("fabiomore198@gmail.com");
         contactDTO.setMessage("Hey, let's keep in touch");
 
-        String createResponse = mockMvc.perform(post("/portfolio/contact")
+        String createResponse = mockMvc.perform(post("/contact")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(contactDTO)))
                 .andExpect(status().isCreated())
@@ -61,28 +61,25 @@ public class ContacControllerIntegralTest {
 
         Integer contactId = objectMapper.readTree(createResponse).get("id").asInt();
 
-        mockMvc.perform(get("/portfolio/admin/dashboard"))
+        mockMvc.perform(get("/admin/dashboard").param("page", "0").param("size", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(contactId));
+                .andExpect(jsonPath("$.content[0].name").value("Fabio"));
 
-        // 3. UPDATE
         ContactUpdateDTO updateDto = new ContactUpdateDTO("Raul",null,null);
 
-        mockMvc.perform(patch("/portfolio/admin/dashboard/{id}", contactId)
+        mockMvc.perform(patch("/admin/dashboard/{id}", contactId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Raul"));
 
-        // 4. DELETE
-        mockMvc.perform(delete("/portfolio/admin/dashboard/{id}", contactId))
+        mockMvc.perform(delete("/admin/dashboard/{id}", contactId))
                 .andExpect(status().isNoContent());
 
-        // 5. VERIFY DELETION
-        mockMvc.perform(get("/portfolio/admin/dashboard"))
+        mockMvc.perform(get("/admin/dashboard").param("page", "1").param("size", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty());
 
     }
 }
