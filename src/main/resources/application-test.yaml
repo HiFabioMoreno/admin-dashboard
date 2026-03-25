@@ -2,9 +2,9 @@ spring:
   user:
     name: test
   datasource:
-    url: jdbc:h2:mem:${DATABASE_TEST_NAME}
-    username: ${DATABASE_TEST_USER}
-    password: ${DATABASE_TEST_PASSWORD}
+    url: jdbc:h2:mem:test_db
+    username: sa
+    password: ""
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
