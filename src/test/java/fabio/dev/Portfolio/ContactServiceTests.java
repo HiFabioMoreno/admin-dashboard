@@ -3,6 +3,7 @@ package fabio.dev.Portfolio;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
+import fabio.dev.Portfolio.DTOs.CreateContactRequest;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
@@ -13,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +34,6 @@ public class ContactServiceTests {
 
     private Contact contact;
     private ContactDTO contactDTO;
-    private ContactUpdateDTO contactUpdateDTO;
     private ContactResponseDTO contactResponseDTO;
 
     @BeforeEach
@@ -61,7 +61,11 @@ public class ContactServiceTests {
                 invocation -> invocation.getArguments()[0]
         );
 
-        Contact contact1 = contactService.saveContact(this.contactDTO);
+        ContactResponseDTO contact1 = contactService.saveContact(new CreateContactRequest(
+                this.contactDTO.getName(),
+                this.contactDTO.getEmail(),
+                this.contactDTO.getMessage()
+        ));
 
         assertEquals("ejemplo@gmail.com", contact1.getEmail());
         assertEquals("Fabio Moreno", contact1.getName());
@@ -71,16 +75,22 @@ public class ContactServiceTests {
     }
 
     @Test
-    @DisplayName("Should show all contacts successfully")
+    @DisplayName("Should Return Paged Contacts Sorted By RegistrationDate")
     public void findAllContactsTest(){
 
-        List<Contact> contacts = Arrays.asList(this.contact);
-        when(contactRepository.findAll()).thenReturn(contacts);
-        List<Contact> results = contactService.findAllContacts();
-        assertEquals(1, results.size());
-        assertEquals("Fabio Moreno", results.get(0).getName());
+        int page = 0;
+        int size = 2;
 
-        verify(contactRepository, times(1)).findAll();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("registrationDate").ascending());
+
+        Page<Contact> pageMock = new PageImpl<>(List.of(new Contact(), new Contact()));
+
+        when(contactRepository.findAll(pageable)).thenReturn(pageMock);
+
+        Page<ContactResponseDTO> result = contactService.findAllContacts(page, size, "registrationDate","asc");
+
+        assertEquals(2, result.getContent().size());
+        verify(contactRepository).findAll(pageable);
     }
 
     @Test

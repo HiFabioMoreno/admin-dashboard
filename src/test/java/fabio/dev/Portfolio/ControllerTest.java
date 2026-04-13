@@ -4,6 +4,7 @@ import fabio.dev.Portfolio.Controllers.ContactController;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
+import fabio.dev.Portfolio.DTOs.CreateContactRequest;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Services.ContactService;
@@ -13,16 +14,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.time.LocalDate;
-import java.util.Arrays;
+
 import java.util.List;
 
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ContactController.class)
-public class ContactControllerTest {
+public class ControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -63,38 +64,20 @@ public class ContactControllerTest {
     }
 
     @Test
-    @DisplayName("Should return all contacts successfully")
-    void findAll_ShouldReturnAllContacts() throws Exception {
+    void shouldReturnPagedContacts() throws Exception {
 
-        List<Contact> contacts = Arrays.asList(this.contact);
+        Page<ContactResponseDTO> page = new PageImpl<>(List.of(new ContactResponseDTO(), new ContactResponseDTO()));
 
-        when(contactService.findAllContacts()).thenReturn(contacts);
+        when(contactService.findAllContacts(eq(0), eq(2), anyString(), anyString())).thenReturn(page);
 
-        mockMvc.perform(get("/portfolio/admin/dashboard")
-                .contentType("application/json"))
+        mockMvc.perform(
+                        get("/admin/dashboard")
+                                .param("page", "0")
+                                .param("size", "2")
+                )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Fabio Moreno"))
-                .andExpect(jsonPath("$[0].message").value("Hey, let's keep in touch"))
-                .andDo(print());
+                .andExpect(jsonPath("$.content.length()").value(2));
 
-        verify(contactService, times(1)).findAllContacts();
-    }
-
-    @Test
-    @DisplayName("Should create contact successfully")
-    void save_WithValidData_ShouldCreateContact() throws Exception {
-        when(contactService.saveContact(any(ContactDTO.class))).thenReturn(contact);
-
-        mockMvc.perform(post("/portfolio/contact")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(this.contactResponseDTO)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Fabio Moreno"))
-                .andExpect(jsonPath("$.message").value("Hey, let's keep in touch"))
-                .andDo(print());
-
-        verify(contactService, times(1)).saveContact(any(ContactDTO.class));
     }
 
     @Test
@@ -103,14 +86,14 @@ public class ContactControllerTest {
 
         ContactDTO invalidDto = new ContactDTO();
 
-        mockMvc.perform(post("/portfolio/contact")
+        mockMvc.perform(post("/contact")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation error"))
                 .andDo(print());
 
-        verify(contactService, never()).saveContact(any(ContactDTO.class));
+        verify(contactService, never()).saveContact(any(CreateContactRequest.class));
     }
 
     @Test
@@ -121,9 +104,9 @@ public class ContactControllerTest {
 
         ContactResponseDTO responseDTO = new ContactResponseDTO(1, "Fabio Moreno", "ejemplo@gmail.com","Hey, let's keep in touch");
 
-        when(contactService.updateContact(eq(contactId),any(ContactUpdateDTO.class))).thenReturn(contact);
+        when(contactService.updateContact(eq(contactId),any(ContactUpdateDTO.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(patch("/portfolio/admin/dashboard/{id}",contactId)
+        mockMvc.perform(patch("/admin/dashboard/{id}",contactId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(responseDTO)))
                 .andExpect(status().isOk())
@@ -144,7 +127,7 @@ public class ContactControllerTest {
         when(contactService.updateContact(eq(contactId), any(ContactUpdateDTO.class)))
                 .thenThrow(new NoEntityException("Contact", contactId));
 
-        mockMvc.perform(patch("/portfolio/admin/dashboard/{id}", contactId)
+        mockMvc.perform(patch("/admin/dashboard/{id}", contactId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isNotFound())
@@ -158,7 +141,7 @@ public class ContactControllerTest {
         Integer contactId = 1;
         doNothing().when(contactService).deleteContact(contactId);
 
-        mockMvc.perform(delete("/portfolio/admin/dashboard/{id}", contactId)
+        mockMvc.perform(delete("/admin/dashboard/{id}", contactId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent())
                 .andDo(print());
@@ -169,13 +152,13 @@ public class ContactControllerTest {
     @Test
     @DisplayName("Should return 404 when deleting non-existent contact")
     void delete_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        // Arrange
+
         Integer contactId = 999;
         doThrow(new NoEntityException("Contact", contactId))
                 .when(contactService).deleteContact(contactId);
 
-        // Act & Assert
-        mockMvc.perform(delete("/portfolio/admin/dashboard/{id}", contactId)
+
+        mockMvc.perform(delete("/admin/dashboard/{id}", contactId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andDo(print());
@@ -184,8 +167,8 @@ public class ContactControllerTest {
     @Test
     @DisplayName("Should return 400 when ID is invalid format")
     void update_WithInvalidIdFormat_ShouldReturnBadRequest() throws Exception {
-        // Act & Assert
-        mockMvc.perform(patch("/portfolio/admin/dashboard/{id}", "invalid-id")
+
+        mockMvc.perform(patch("/admin/dashboard/{id}", "invalid-id")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"read\": true}"))
                 .andExpect(status().isBadRequest())
