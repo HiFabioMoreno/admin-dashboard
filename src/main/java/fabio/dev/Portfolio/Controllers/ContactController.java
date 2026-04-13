@@ -2,7 +2,6 @@ package fabio.dev.Portfolio.Controllers;
 
 import fabio.dev.Portfolio.DTOs.*;
 import fabio.dev.Portfolio.Services.ContactService;
-import fabio.dev.Portfolio.Models.Contact;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

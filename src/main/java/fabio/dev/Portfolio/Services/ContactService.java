@@ -47,7 +47,7 @@ public class ContactService{
             String sortBy,
             String sortDirection){
 
-        logger.info("founded all contacts successfully");
+        logger.info("all contacts found successfully");
 
         Sort sort = sortDirection.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
