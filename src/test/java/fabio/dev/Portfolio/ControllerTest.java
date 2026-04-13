@@ -4,6 +4,7 @@ import fabio.dev.Portfolio.Controllers.ContactController;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
+import fabio.dev.Portfolio.DTOs.CreateContactRequest;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Services.ContactService;
@@ -64,10 +65,10 @@ public class ControllerTest {
 
     @Test
     void shouldReturnPagedContacts() throws Exception {
-        Page<Contact> page =
-                new PageImpl<>(List.of(new Contact(), new Contact()));
 
-        when(contactService.findAllContacts(0, 2,"","asc")).thenReturn(page);
+        Page<ContactResponseDTO> page = new PageImpl<>(List.of(new ContactResponseDTO(), new ContactResponseDTO()));
+
+        when(contactService.findAllContacts(eq(0), eq(2), anyString(), anyString())).thenReturn(page);
 
         mockMvc.perform(
                         get("/admin/dashboard")
@@ -76,6 +77,7 @@ public class ControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2));
+
     }
 
     @Test
@@ -91,7 +93,7 @@ public class ControllerTest {
                 .andExpect(jsonPath("$.message").value("Validation error"))
                 .andDo(print());
 
-        verify(contactService, never()).saveContact(any(ContactDTO.class));
+        verify(contactService, never()).saveContact(any(CreateContactRequest.class));
     }
 
     @Test
@@ -102,7 +104,7 @@ public class ControllerTest {
 
         ContactResponseDTO responseDTO = new ContactResponseDTO(1, "Fabio Moreno", "ejemplo@gmail.com","Hey, let's keep in touch");
 
-        when(contactService.updateContact(eq(contactId),any(ContactUpdateDTO.class))).thenReturn(contact);
+        when(contactService.updateContact(eq(contactId),any(ContactUpdateDTO.class))).thenReturn(responseDTO);
 
         mockMvc.perform(patch("/admin/dashboard/{id}",contactId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -150,12 +152,12 @@ public class ControllerTest {
     @Test
     @DisplayName("Should return 404 when deleting non-existent contact")
     void delete_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        // Arrange
+
         Integer contactId = 999;
         doThrow(new NoEntityException("Contact", contactId))
                 .when(contactService).deleteContact(contactId);
 
-        // Act & Assert
+
         mockMvc.perform(delete("/admin/dashboard/{id}", contactId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -165,7 +167,7 @@ public class ControllerTest {
     @Test
     @DisplayName("Should return 400 when ID is invalid format")
     void update_WithInvalidIdFormat_ShouldReturnBadRequest() throws Exception {
-        // Act & Assert
+
         mockMvc.perform(patch("/admin/dashboard/{id}", "invalid-id")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"read\": true}"))

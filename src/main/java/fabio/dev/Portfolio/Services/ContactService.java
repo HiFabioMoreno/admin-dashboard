@@ -1,7 +1,8 @@
 package fabio.dev.Portfolio.Services;
 
-import fabio.dev.Portfolio.DTOs.ContactDTO;
+import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
+import fabio.dev.Portfolio.DTOs.CreateContactRequest;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
@@ -25,20 +26,22 @@ public class ContactService{
     }
 
     @Transactional
-    public Contact saveContact(ContactDTO dto){
+    public ContactResponseDTO saveContact(CreateContactRequest createContactRequest) {
 
         logger.info("saving new contact");
 
         Contact contact = new Contact();
-        contact.setName(dto.getName());
-        contact.setEmail(dto.getEmail());
-        contact.setMessage(dto.getMessage());
+        contact.setName(createContactRequest.name());
+        contact.setEmail(createContactRequest.email());
+        contact.setMessage(createContactRequest.message());
 
         logger.info("saved contact with id {} successfuly", contact.getId());
-        return contactRepository.save(contact);
+
+        contactRepository.save(contact);
+        return new ContactResponseDTO(contact.getId(),contact.getName(), contact.getEmail(), contact.getMessage());
     }
 
-    public Page<Contact> findAllContacts(
+    public Page<ContactResponseDTO> findAllContacts(
             Integer page,
             Integer size,
             String sortBy,
@@ -50,11 +53,16 @@ public class ContactService{
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
-        return contactRepository.findAll(PageRequest.of(page, size, sort));
+        Page<Contact> pagesContact = contactRepository.findAll(PageRequest.of(page, size, sort));
+
+        Page<ContactResponseDTO> pagesContactDto = pagesContact.map(contact ->  new ContactResponseDTO(contact.getId(), contact.getName(), contact.getEmail(), contact.getMessage()));
+
+        return pagesContactDto;
+
     }
 
     @Transactional
-    public Contact updateContact(Integer id, ContactUpdateDTO dto){
+    public ContactResponseDTO updateContact(Integer id, ContactUpdateDTO dto){
 
         logger.info("updating contact with id {}", id);
 
@@ -68,8 +76,11 @@ public class ContactService{
         if (dto.email() != null){contact.setEmail(dto.email());}
         if (dto.message() != null){contact.setMessage(dto.message());}
 
+        Contact updatedContact = contactRepository.save(contact);
+
         logger.info("updated contact with id {} successfully", id);
-        return contactRepository.save(contact);
+
+        return new ContactResponseDTO(id, updatedContact.getName(), updatedContact.getEmail(), updatedContact.getMessage());
     }
 
     @Transactional

@@ -3,6 +3,7 @@ package fabio.dev.Portfolio;
 import fabio.dev.Portfolio.DTOs.ContactDTO;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
+import fabio.dev.Portfolio.DTOs.CreateContactRequest;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
@@ -60,7 +61,11 @@ public class ContactServiceTests {
                 invocation -> invocation.getArguments()[0]
         );
 
-        Contact contact1 = contactService.saveContact(this.contactDTO);
+        ContactResponseDTO contact1 = contactService.saveContact(new CreateContactRequest(
+                this.contactDTO.getName(),
+                this.contactDTO.getEmail(),
+                this.contactDTO.getMessage()
+        ));
 
         assertEquals("ejemplo@gmail.com", contact1.getEmail());
         assertEquals("Fabio Moreno", contact1.getName());
@@ -82,7 +87,7 @@ public class ContactServiceTests {
 
         when(contactRepository.findAll(pageable)).thenReturn(pageMock);
 
-        Page<Contact> result = contactService.findAllContacts(page, size, "registrationDate","asc");
+        Page<ContactResponseDTO> result = contactService.findAllContacts(page, size, "registrationDate","asc");
 
         assertEquals(2, result.getContent().size());
         verify(contactRepository).findAll(pageable);
