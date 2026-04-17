@@ -1,9 +1,6 @@
 package fabio.dev.Portfolio;
 
-import fabio.dev.Portfolio.DTOs.ContactDTO;
-import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
-import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
-import fabio.dev.Portfolio.DTOs.CreateContactRequest;
+import fabio.dev.Portfolio.DTOs.*;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
@@ -15,12 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -78,19 +75,20 @@ public class ContactServiceTests {
     @DisplayName("Should Return Paged Contacts Sorted By RegistrationDate")
     public void findAllContactsTest(){
 
-        int page = 0;
-        int size = 2;
+        Page<Contact> pageMock = new PageImpl<>(List.of(this.contact, new Contact()));
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("registrationDate").ascending());
+        ContactFilterRequest filterRequest = new ContactFilterRequest(0,2,"name","asc","Fabio Moreno",null);
 
-        Page<Contact> pageMock = new PageImpl<>(List.of(new Contact(), new Contact()));
+        when(contactRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(pageMock);
 
-        when(contactRepository.findAll(pageable)).thenReturn(pageMock);
+        Page<ContactResponseDTO> result = contactService.findAllContacts(filterRequest);
 
-        Page<ContactResponseDTO> result = contactService.findAllContacts(page, size, "registrationDate","asc");
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        assertEquals("Fabio Moreno", result.getContent().get(0).getName());
 
-        assertEquals(2, result.getContent().size());
-        verify(contactRepository).findAll(pageable);
+        verify(contactRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
+
     }
 
     @Test

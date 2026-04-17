@@ -4,6 +4,7 @@ import fabio.dev.Portfolio.DTOs.*;
 import fabio.dev.Portfolio.Services.ContactService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +22,8 @@ public class ContactController{
     }
 
     @GetMapping("/admin/dashboard")
-    public ResponseEntity<Page<ContactResponseDTO>> findAll(
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "2") Integer size,
-            @RequestParam(name = "sortBy", defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
-    ){
-
-        return ResponseEntity.ok(contactService.findAllContacts(page, size,sortBy,direction));
+    public ResponseEntity<Page<ContactResponseDTO>> findAll(@ModelAttribute ContactFilterRequest filterRequest){
+        return ResponseEntity.ok(contactService.findAllContacts(filterRequest));
     }
 
     @PatchMapping("/admin/dashboard/{id}")

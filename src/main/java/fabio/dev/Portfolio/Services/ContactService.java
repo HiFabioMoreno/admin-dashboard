@@ -1,17 +1,21 @@
 package fabio.dev.Portfolio.Services;
 
+import fabio.dev.Portfolio.DTOs.ContactFilterRequest;
 import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
 import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
 import fabio.dev.Portfolio.DTOs.CreateContactRequest;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Repositorys.ContactRepository;
+import fabio.dev.Portfolio.Specifications.SpecificationContact;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,23 +45,29 @@ public class ContactService{
         return new ContactResponseDTO(contact.getId(),contact.getName(), contact.getEmail(), contact.getMessage());
     }
 
-    public Page<ContactResponseDTO> findAllContacts(
-            Integer page,
-            Integer size,
-            String sortBy,
-            String sortDirection){
+    public Page<ContactResponseDTO> findAllContacts(ContactFilterRequest contactFilterRequest) {
 
         logger.info("all contacts found successfully");
 
-        Sort sort = sortDirection.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
+        Sort sort = contactFilterRequest.sortDirection().equalsIgnoreCase("desc") ?
+                Sort.by(contactFilterRequest.sortBy()).descending() :
+                Sort.by(contactFilterRequest.sortBy()).ascending();
 
-        Page<Contact> pagesContact = contactRepository.findAll(PageRequest.of(page, size, sort));
+        Pageable pageable = PageRequest.of(contactFilterRequest.page(), contactFilterRequest.size(), sort);
 
-        Page<ContactResponseDTO> pagesContactDto = pagesContact.map(contact ->  new ContactResponseDTO(contact.getId(), contact.getName(), contact.getEmail(), contact.getMessage()));
+        Specification<Contact> spec = (root, query, cb) -> cb.conjunction();
 
-        return pagesContactDto;
+        if (contactFilterRequest.name() != null  && !contactFilterRequest.name().isEmpty()) {
+            spec = spec.and(SpecificationContact.findByName(contactFilterRequest.name()));
+        }
+
+        if (contactFilterRequest.email() != null  && !contactFilterRequest.email().isEmpty()) {
+            spec = spec.and(SpecificationContact.findByEmail(contactFilterRequest.email()));
+        }
+
+        Page<Contact> pagesContact = contactRepository.findAll(spec, pageable);
+
+        return pagesContact.map(contact -> new ContactResponseDTO(contact.getId(), contact.getName(), contact.getEmail(), contact.getMessage()));
 
     }
 

@@ -1,10 +1,7 @@
 package fabio.dev.Portfolio;
 
 import fabio.dev.Portfolio.Controllers.ContactController;
-import fabio.dev.Portfolio.DTOs.ContactDTO;
-import fabio.dev.Portfolio.DTOs.ContactResponseDTO;
-import fabio.dev.Portfolio.DTOs.ContactUpdateDTO;
-import fabio.dev.Portfolio.DTOs.CreateContactRequest;
+import fabio.dev.Portfolio.DTOs.*;
 import fabio.dev.Portfolio.Exceptions.NoEntityException;
 import fabio.dev.Portfolio.Models.Contact;
 import fabio.dev.Portfolio.Services.ContactService;
@@ -68,7 +65,7 @@ public class ControllerTest {
 
         Page<ContactResponseDTO> page = new PageImpl<>(List.of(new ContactResponseDTO(), new ContactResponseDTO()));
 
-        when(contactService.findAllContacts(eq(0), eq(2), anyString(), anyString())).thenReturn(page);
+        when(contactService.findAllContacts(any(ContactFilterRequest.class))).thenReturn(page);
 
         mockMvc.perform(
                         get("/admin/dashboard")
