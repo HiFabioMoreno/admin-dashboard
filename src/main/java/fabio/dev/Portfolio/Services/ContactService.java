@@ -55,19 +55,19 @@ public class ContactService{
 
         Pageable pageable = PageRequest.of(contactFilterRequest.page(), contactFilterRequest.size(), sort);
 
-        Specification<ContactResponseDTO> spec = (root, query, cb) -> cb.conjunction();
+        Specification<Contact> spec = (root, query, cb) -> cb.conjunction();
 
-        if (contactFilterRequest.name() != null  || !contactFilterRequest.name().isEmpty()) {
+        if (contactFilterRequest.name() != null  && !contactFilterRequest.name().isEmpty()) {
             spec = spec.and(SpecificationContact.findByName(contactFilterRequest.name()));
         }
 
-        if (contactFilterRequest.email() != null  || !contactFilterRequest.email().isEmpty()) {
+        if (contactFilterRequest.email() != null  && !contactFilterRequest.email().isEmpty()) {
             spec = spec.and(SpecificationContact.findByEmail(contactFilterRequest.email()));
         }
 
-        Page<ContactResponseDTO> pagesContactDto = contactRepository.findAll(spec, pageable);
+        Page<Contact> pagesContact = contactRepository.findAll(spec, pageable);
 
-        return pagesContactDto;
+        return pagesContact.map(contact -> new ContactResponseDTO(contact.getId(), contact.getName(), contact.getEmail(), contact.getMessage()));
 
     }
 
